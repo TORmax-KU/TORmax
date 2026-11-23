@@ -2,13 +2,13 @@ services:
 
   frontend:
     build:
-      context: ./TORment-Frontend
+      context: ./Untitled-Collab-Project-Frontend
 
     ports:
       - "3000:3000"
 
     volumes:
-      - ./TORment-Frontend:/app
+      - ./Untitled-Collab-Project-Frontend:/app
       - /app/node_modules
 
     environment:

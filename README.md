@@ -215,6 +215,103 @@ See the [backend README](csp-backend/README.md#optional-features).
 
 ---
 
+## Hosting (Vercel + Render)
+
+This puts TORmax online for free. It uses three services:
+
+| Part | Host | Free plan limits |
+| --- | --- | --- |
+| Database | [MongoDB Atlas](https://www.mongodb.com/atlas) | 512 MB of storage |
+| Backend (`csp-backend`) | [Render](https://render.com) | 512 MB RAM. Sleeps after 15 minutes without requests (step 4 fixes this) |
+| Website (`Untitled-Collab-Project-Frontend`) | [Vercel](https://vercel.com) | Hobby plan, non-commercial use only |
+
+Vercel and Render deploy straight from each **app repository**. They don't use
+this root repo or its submodules. Every push to an app repo's `main` branch
+redeploys that app. To connect a repo, the host's GitHub app needs access to
+it. The repo owner can grant that, or you can fork the repo and deploy your
+fork.
+
+Below, `<api>` stands for your Render address (e.g. `tormax-api.onrender.com`)
+and `<site>` for your Vercel address (e.g. `tormax.vercel.app`).
+
+### 1. Database: MongoDB Atlas
+
+1. Create a free **M0** cluster and a database user.
+2. Under **Network Access**, allow `0.0.0.0/0`, because Render's addresses
+   change.
+3. Copy the connection string and add a database name after the host, e.g.
+   `mongodb+srv://user:password@cluster0.xxxxx.mongodb.net/tormax?retryWrites=true&w=majority`.
+
+### 2. Backend: Render
+
+1. **New → Web Service**, then connect the `csp-backend` repo.
+2. Choose these settings:
+   - **Language:** Node. Don't use Docker: the Dockerfile is for development.
+   - **Build command:** `npm ci --omit=dev --ignore-scripts`
+   - **Start command:** `npm start`
+   - **Instance type:** Free
+3. Add these environment variables. Leave `PORT` out, because Render sets it.
+
+   | Variable | Value |
+   | --- | --- |
+   | `NODE_ENV` | `production` |
+   | `MONGO_URI` | The Atlas connection string from step 1 |
+   | `SESSION_SECRET` | A long random value (see Option A, step 2) |
+   | `FRONTEND_URL` | `https://<site>` |
+
+   Add any other settings you want from
+   [csp-backend/.env.example](csp-backend/.env.example), such as the ingestion
+   switches.
+4. Deploy, then open `https://<api>/`. It should say `Backend is running`.
+
+### 3. Website: Vercel
+
+1. **Add New → Project**, then import the `Untitled-Collab-Project-Frontend`
+   repo. Vercel detects Next.js by itself.
+2. Add these environment variables, then deploy:
+
+   | Variable | Value |
+   | --- | --- |
+   | `NEXT_PUBLIC_API_URL` | `/backend` |
+   | `BACKEND_URL` | `https://<api>` |
+
+   The website forwards `/backend/...` requests to Render, which keeps the
+   login cookie on the website's own address. Calling Render directly from the
+   browser would log people out right after they sign in.
+3. If your Vercel address turns out different from the `FRONTEND_URL` you set
+   on Render, update it there.
+
+### 4. Keep the backend awake
+
+Render's free backend sleeps after 15 minutes without requests. While it
+sleeps, imports and matching stop, and the next visitor waits about a minute.
+Create a free job on [cron-job.org](https://cron-job.org) that opens
+`https://<api>/` every **10 minutes**. Render's 750 free hours a month cover one
+service running all month.
+
+### 5. Google login (optional)
+
+In Google Cloud Console, add `https://<site>/backend/auth/google/callback` as an
+authorized redirect URI. On Render, set `GOOGLE_CALLBACK_URL` to the same
+address, and fill in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+### Good to know
+
+- **Government TORs need AI analysis** to appear, as on your own computer (see
+  [section 2](#2-your-first-visit-why-the-feed-is-empty)). For Vertex AI on
+  Render, upload your service account JSON as a Render **Secret File** and set
+  `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/<file name>`.
+- **Run only one importing backend per database.** If you point a local backend
+  at the Atlas database, set `INGESTION_ENABLED=false` locally.
+- **Make an admin** by running `node scripts/create-admin.js --email you@example.com`
+  on your computer inside `csp-backend`, with `MONGO_URI` set to the Atlas
+  string.
+- **Logged out right after signing in?** Check `NODE_ENV=production` on Render
+  and `NEXT_PUBLIC_API_URL=/backend` on Vercel. Redeploy Vercel after changing
+  a `NEXT_PUBLIC_` variable, because its value is fixed at build time.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
