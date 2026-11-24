@@ -1,66 +1,66 @@
+# The only Compose file for TORmax. Run from this repository root:
+#   docker compose up -d --build
+#
+# Backend settings come from csp-backend/.env (copy csp-backend/.env.example).
+# Values under `environment:` below override that file for the container network.
+#
+# Optional Vertex AI analysis: set VERTEX_AI_ENABLED=true in csp-backend/.env, then
+# point GOOGLE_ADC_HOST_PATH at your Application Default Credentials file, either in
+# your shell or in a root .env file (path only, never the credential contents):
+#   PowerShell: $env:GOOGLE_ADC_HOST_PATH = "$env:APPDATA\gcloud\application_default_credentials.json"
+#   macOS/Linux: export GOOGLE_ADC_HOST_PATH="$HOME/.config/gcloud/application_default_credentials.json"
+# When it is unset, no credentials are mounted and the AI worker reports ADC as unavailable.
+
 services:
 
   frontend:
     build:
       context: ./Untitled-Collab-Project-Frontend
-
     ports:
       - "3000:3000"
-
     volumes:
       - ./Untitled-Collab-Project-Frontend:/app
       - /app/node_modules
-
+      # Keep container build output separate from a host `npm run dev`/`build`.
+      - /app/.next
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:5001
-
     depends_on:
       - backend
-
 
   backend:
     build:
       context: ./csp-backend
-
     ports:
       - "5001:5000"
-
     volumes:
       - ./csp-backend:/app
       - /app/node_modules
-
+      # Placeholder when GOOGLE_ADC_HOST_PATH is unset; it is never read because
+      # GOOGLE_APPLICATION_CREDENTIALS below is then empty.
+      - ${GOOGLE_ADC_HOST_PATH:-./csp-backend/.env.example}:/run/secrets/gcloud-adc.json:ro
+    env_file:
+      - path: ./csp-backend/.env
+        required: false
     environment:
       - PORT=5000
       - MONGO_URI=mongodb://mongo:27017/fullstack_db
-
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_ADC_HOST_PATH:+/run/secrets/gcloud-adc.json}
     depends_on:
       mongo:
         condition: service_healthy
 
-
   mongo:
     image: mongo:8.0
-
     ports:
       - "27017:27017"
-
     volumes:
       - mongo_data:/data/db
-
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mongosh",
-          "--quiet",
-          "--eval",
-          "db.adminCommand('ping')"
-        ]
-
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 5s
       timeout: 5s
       retries: 10
-
 
 volumes:
   mongo_data:

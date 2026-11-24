@@ -1,0 +1,4 @@
+# Compose reads a root .env for variables such as GOOGLE_ADC_HOST_PATH (a path, never credentials).
+.env
+*credentials*.json
+*service-account*.json

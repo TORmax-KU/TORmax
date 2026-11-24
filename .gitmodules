@@ -1,7 +1,7 @@
 [submodule "frontend"]
 	path = Untitled-Collab-Project-Frontend
-	url = https://github.com/Karczel/Untitled-Collab-Project-Frontend
+	url = https://github.com/TORmax-KU/TORmax-Frontend
 
 [submodule "backend"]
 	path = csp-backend
-	url = https://github.com/GotAdithep/csp-backend
+	url = https://github.com/TORmax-KU/csp-backend
