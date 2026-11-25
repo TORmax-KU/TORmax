@@ -187,7 +187,9 @@ out empty. This is expected.
 - A government TOR only appears publicly after **AI analysis** (Google Vertex
   AI) has read its PDF and confirmed the details. That needs your own Google
   Cloud setup. See [csp-backend/docs/vertex-ai.md](csp-backend/docs/vertex-ai.md).
-  You can use the rest of the website without it.
+  You can use the rest of the website without it. The
+  [public feed diagram](diagrams/8-activity-public-feed.png) lists every check
+  a TOR must pass.
 - Your database belongs to you. Pulling from Git does not copy a teammate's
   data.
 
@@ -339,7 +341,69 @@ To update both apps to the latest commit on their default branches:
 git submodule update --remote
 ```
 
+## Diagrams
+
+The [`diagrams/`](diagrams/) folder shows how TORmax works. Click a diagram's
+name to expand it.
+
+<details>
+<summary><b>1. System architecture</b>: the website, API, background workers, MongoDB and outside services</summary>
+
+![System architecture](diagrams/1-system-architecture.png)
+
+</details>
+
+<details>
+<summary><b>2. ER diagram</b>: the database collections and how they relate</summary>
+
+![ER diagram](diagrams/2-er-diagram.png)
+
+</details>
+
+<details>
+<summary><b>3. Use cases</b>: what vendors, job listers and admins can do</summary>
+
+![Use cases](diagrams/3-use-cases.png)
+
+</details>
+
+<details>
+<summary><b>4. Ingestion and AI analysis</b>: how TORs are downloaded from government websites and analysed with Vertex AI</summary>
+
+![Sequence diagram: ingestion and AI analysis](diagrams/4-seq-ingestion-ai.png)
+
+</details>
+
+<details>
+<summary><b>5. Sign-in and sessions</b>: how logging in works</summary>
+
+![Sequence diagram: sign-in and session](diagrams/5-seq-signin-session.png)
+
+</details>
+
+<details>
+<summary><b>6. Matching and alerts</b>: how vendors are matched to TORs and notified</summary>
+
+![Sequence diagram: matching and alerts](diagrams/6-seq-match-alerts.png)
+
+</details>
+
+<details>
+<summary><b>7. Analysis status</b>: the states a TOR goes through during AI analysis</summary>
+
+![State diagram: analysis status](diagrams/7-state-analysis-status.png)
+
+</details>
+
+<details>
+<summary><b>8. Public feed</b>: the checks a TOR must pass before it appears publicly</summary>
+
+![Activity diagram: public feed](diagrams/8-activity-public-feed.png)
+
+</details>
+
 ## More documentation
 
+- [Diagrams](#diagrams): architecture, database, use cases and main flows
 - [Backend README](csp-backend/README.md): settings, tests, scripts and detailed docs
 - [Frontend README](Untitled-Collab-Project-Frontend/README.md): project structure and scripts
